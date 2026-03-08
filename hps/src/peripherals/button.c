@@ -4,6 +4,13 @@
 #include "../../includes/hal/hal-api.h"
 #include "../../lib/address_map_arm.h"
 
+// NOTE:
+// KEY buttons on DE10 are active-low in hardware.
+// Quartus top-level already inverts them (~KEY[3:0]),
+// so the register reads here are active-high:
+//   pressed  = 1
+//   released = 0
+
 // -----------------------------------------------------------------------------
 // API IMPLEMENTATION
 // -----------------------------------------------------------------------------

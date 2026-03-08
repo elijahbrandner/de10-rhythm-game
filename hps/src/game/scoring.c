@@ -58,7 +58,7 @@ int scoring_score_button_step(scoring_ctx_t *ctx,
                               hit_grade_t *grade_out) {
     if (!ctx) return 0;
 
-    // Wrong lane penalty: you wanted points taken away for wrong button.
+    // Wrong lane penalty: we wanted points taken away for wrong button.
     // Penalty size: 50% of base step points (tune later).
     const int wrong_penalty = (int)(ctx->step_points_base / 2u);
 

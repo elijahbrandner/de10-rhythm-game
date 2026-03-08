@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "game_types.h"
+#include "scoring.h"
 #include "../fpga/fpga_if.h"
 
 // ----------------------------
@@ -26,25 +27,23 @@ typedef enum {
 typedef struct {
     uint32_t switches;     // SW[9:0] bitmask
     uint32_t buttons_raw;  // KEY[3:0] bitmask (pressed=1, not inverted)
-    bool shake_detected;   // from accel (later); for now can be false
+    bool shake_detected;   // from accel
 } game_inputs_t;
 
 // ----------------------------
 // Game outputs (consumed by UI layer later)
 // ----------------------------
 typedef struct {
-    // These are "intent" outputs. main.c / lcd.c will render them later.
     game_state_t state;
     game_mode_t mode;
     uint32_t bpm;
     uint32_t seq_len;
 
-    // Simple UI strings (optional now, useful later)
     const char *line1;
     const char *line2;
 
-    // Score/results
     uint32_t score_0_100;
+    const char *rating_text;
 } game_outputs_t;
 
 // ----------------------------
@@ -53,35 +52,38 @@ typedef struct {
 typedef struct {
     game_state_t state;
 
-    // Inputs tracking for edge detection
+    // input edge tracking
     uint32_t prev_buttons;
 
-    // Selected modes
-    select_mode_t select_mode; // ladder or free
+    // mode selection
+    select_mode_t select_mode;
     game_mode_t mode;
 
-    // Params derived from mode
+    // round parameters
     uint32_t bpm;
     uint32_t seq_len;
+    uint32_t seed;
 
-    // Sequence buffer
+    // generated sequence
     fpga_step_t steps[64];
 
-    // Timing
+    // timing / state entry
     uint32_t state_enter_ms;
 
-    // Playback sync
+    // playback sync
     uint32_t last_beat_edge;
     uint32_t last_step_index;
 
-    // Score
+    // scoring
+    scoring_ctx_t scoring;
+    bool step_scored[64];
     uint32_t score;
     bool completed;
 
-    // Exit
+    // control
     bool should_exit;
 
-    // Output snapshot
+    // UI snapshot
     game_outputs_t out;
 } game_t;
 

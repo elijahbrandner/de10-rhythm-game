@@ -3,6 +3,9 @@
 #include "../../lib/address_map_arm.h"
 #include <stdint.h>
 
+// In ladder mode (SW9 = 0), switch helper returns Easy as the
+// starting/default mode. Actual ladder progression is handled by game.c.
+
 int switch_init(switch_handle_t *sw, hal_map_t *hal) {
     if (!sw || !hal) return -1;
 
