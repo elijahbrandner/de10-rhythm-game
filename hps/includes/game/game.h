@@ -79,12 +79,18 @@ typedef struct {
     bool step_scored[64];
     uint32_t score;
     bool completed;
+    
+    // LCD display
+    uint32_t last_score;
+    const char *last_rating_text;
 
     // control
     bool should_exit;
 
     // UI snapshot
     game_outputs_t out;
+
+    
 } game_t;
 
 // ----------------------------

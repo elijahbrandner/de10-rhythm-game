@@ -167,6 +167,11 @@ void game_init(game_t *g) {
     g->select_mode = SELECT_LADDER;
     g->mode = GAME_MODE_EASY;
 
+    g->score = 0;
+    g->last_score = 0;
+    g->last_rating_text = "";
+    g->completed = false;
+
     sequence_mode_params(g->mode, &g->bpm, &g->seq_len);
 
     g->out.state = g->state;
@@ -218,7 +223,6 @@ void game_update(game_t *g, fpga_if_t *fpga, const game_inputs_t *in, uint32_t n
     switch (g->state) {
 
         case ST_IDLE: {
-            g->completed = false;
             g->score = 0;
             g->out.score_0_100 = 0;
             g->out.rating_text = "";
@@ -233,6 +237,7 @@ void game_update(game_t *g, fpga_if_t *fpga, const game_inputs_t *in, uint32_t n
 
             if (edges & 0x1u) {
                 g->seed = now_ms;
+                g->completed = false;
                 fpga_if_reset_pulse(fpga);
 
                 enter_state(g, ST_WATCH, now_ms);
@@ -270,7 +275,6 @@ void game_update(game_t *g, fpga_if_t *fpga, const game_inputs_t *in, uint32_t n
             uint32_t idx = elapsed / step_ms;
 
             if (idx >= g->seq_len) {
-                // Hold in READY state until player presses KEY0
                 fpga_show_step(fpga, g->mode, 0, FPGA_LED_CHASE);
                 enter_state(g, ST_GO, now_ms);
                 set_output_text(g, "READY", "KEY0 to begin");
@@ -282,7 +286,6 @@ void game_update(game_t *g, fpga_if_t *fpga, const game_inputs_t *in, uint32_t n
         } break;
 
         case ST_GO: {
-            // Player-controlled start state
             fpga_show_step(fpga, g->mode, 0, FPGA_LED_CHASE);
 
             if (edges & 0x1u) {
@@ -307,8 +310,12 @@ void game_update(game_t *g, fpga_if_t *fpga, const game_inputs_t *in, uint32_t n
                 fpga_if_clear(fpga);
 
                 g->score = scoring_finalize_0_100(&g->scoring);
+                g->last_score = g->score;
+                g->last_rating_text = scoring_rating(g->score);
+                g->completed = true;
+
                 g->out.score_0_100 = g->score;
-                g->out.rating_text = scoring_rating(g->score);
+                g->out.rating_text = g->last_rating_text;
 
                 fpga_results_visual(fpga, g->mode, g->score);
 

@@ -198,13 +198,19 @@ int main(void) {
                 snprintf(line2, sizeof(line2), "Diff: %s", mode_str(out->mode));
                 snprintf(line3, sizeof(line3), "Score: %3u", out->score_0_100);
                 snprintf(line4, sizeof(line4), "%s",
-                         (out->rating_text ? out->rating_text : ""));
+                        (out->rating_text ? out->rating_text : ""));
+            } else if (out->state == ST_IDLE && game.completed) {
+                snprintf(line1, sizeof(line1), "Mode: %s", select_mode_str(game.select_mode));
+                snprintf(line2, sizeof(line2), "Diff: %s", mode_str(out->mode));
+                snprintf(line3, sizeof(line3), "Last: %3u", game.last_score);
+                snprintf(line4, sizeof(line4), "%s",
+                        (game.last_rating_text ? game.last_rating_text : ""));
             } else {
                 snprintf(line1, sizeof(line1), "Mode: %s", select_mode_str(game.select_mode));
                 snprintf(line2, sizeof(line2), "Diff: %s", mode_str(out->mode));
                 snprintf(line3, sizeof(line3), "BPM: %u", out->bpm);
                 snprintf(line4, sizeof(line4), "%s",
-                         (out->line2 ? out->line2 : ""));
+                        (out->line2 ? out->line2 : ""));
             }
 
             lcd_clear(&lcd);
