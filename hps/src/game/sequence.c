@@ -14,29 +14,35 @@ static uint32_t xorshift32(uint32_t *state) {
     return x;
 }
 
-void sequence_mode_params(game_mode_t mode, uint32_t *bpm_out, uint32_t *len_out) {
+void sequence_mode_params(game_mode_t mode, uint32_t *bpm_out, uint32_t *len_out)
+{
     if (!bpm_out || !len_out) return;
 
-    switch (mode) {
+    switch (mode)
+    {
         case GAME_MODE_EASY:
-            *bpm_out = 60;
+            *bpm_out = 45;
             *len_out = 5;
             break;
+
         case GAME_MODE_MEDIUM:
-            *bpm_out = 90;
+            *bpm_out = 60;
             *len_out = 8;
             break;
+
         case GAME_MODE_HARD:
-            *bpm_out = 120;
+            *bpm_out = 75;
             *len_out = 10;
             break;
+
         case GAME_MODE_EXPERT:
-            *bpm_out = 120;
-            *len_out = 10;
+            *bpm_out = 75;
+            *len_out = 12;
             break;
+
         default:
             *bpm_out = 60;
-            *len_out = 5;
+            *len_out = 8;
             break;
     }
 }

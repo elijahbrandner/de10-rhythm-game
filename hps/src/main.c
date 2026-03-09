@@ -12,7 +12,6 @@
 #include "../includes/peripherals/accel.h"
 
 #include "../includes/fpga/fpga_if.h"
-
 #include "../includes/game/game.h"
 
 // ------------------------------------------------------------
@@ -32,7 +31,7 @@ static uint32_t now_ms(void) {
 }
 
 // ------------------------------------------------------------
-// Optional text helpers for console/debug
+// Text helpers
 // ------------------------------------------------------------
 static const char *mode_str(game_mode_t m) {
     switch (m) {
@@ -41,6 +40,14 @@ static const char *mode_str(game_mode_t m) {
         case GAME_MODE_HARD:   return "Hard";
         case GAME_MODE_EXPERT: return "Expert";
         default:               return "Unknown";
+    }
+}
+
+static const char *select_mode_str(select_mode_t m) {
+    switch (m) {
+        case SELECT_LADDER: return "LADDER";
+        case SELECT_FREE:   return "SELECT";
+        default:            return "UNKNOWN";
     }
 }
 
@@ -61,18 +68,12 @@ static const char *state_str(game_state_t s) {
 // Main
 // ------------------------------------------------------------
 int main(void) {
-    // ----------------------------
-    // HAL
-    // ----------------------------
     hal_map_t hal = {0};
     if (hal_open(&hal) != 0) {
         printf("[MAIN] ERROR: hal_open failed.\n");
         return 1;
     }
 
-    // ----------------------------
-    // Peripherals
-    // ----------------------------
     button_handle_t buttons = {0};
     if (button_init(&buttons, &hal) != 0) {
         printf("[MAIN] ERROR: button_init failed.\n");
@@ -89,13 +90,15 @@ int main(void) {
     }
 
     lcd_handle_t lcd = {0};
-    bool lcd_ok = (lcd_init(&lcd, &hal) == 0);
+    bool lcd_ok = (lcd_init(&lcd) == 0);
     if (!lcd_ok) {
         printf("[MAIN] WARNING: lcd_init failed. Continuing without LCD.\n");
     } else {
+        lcd_backlight(&lcd, true);
         lcd_clear(&lcd);
-        lcd_write_line(&lcd, 0, "Rhythm-Based Timing Game");
-        lcd_write_line(&lcd, 1, "Booting...");
+        lcd_write_text(&lcd, 0, 0,  "Rhythm Game");
+        lcd_write_text(&lcd, 0, 16, "Booting...");
+        lcd_refresh(&lcd);
     }
 
     accel_handle_t accel = {0};
@@ -103,21 +106,23 @@ int main(void) {
     if (!accel_ok) {
         printf("[MAIN] WARNING: accel_init failed. Continuing without shake input.\n");
         if (lcd_ok) {
-            lcd_write_line(&lcd, 1, "Accel unavailable");
+            lcd_clear(&lcd);
+            lcd_write_text(&lcd, 0, 0,  "Rhythm Game");
+            lcd_write_text(&lcd, 0, 16, "Accel unavailable");
+            lcd_refresh(&lcd);
         }
     }
 
-    // ----------------------------
-    // FPGA interface
-    // ----------------------------
     fpga_if_t fpga = {0};
     if (fpga_if_init(&fpga, &hal) != 0) {
         printf("[MAIN] ERROR: fpga_if_init failed.\n");
 
         if (accel_ok) accel_cleanup(&accel);
         if (lcd_ok) {
-            lcd_write_line(&lcd, 0, "ERROR");
-            lcd_write_line(&lcd, 1, "FPGA IF init failed");
+            lcd_clear(&lcd);
+            lcd_write_text(&lcd, 0, 0,  "ERROR");
+            lcd_write_text(&lcd, 0, 16, "FPGA init failed");
+            lcd_refresh(&lcd);
             lcd_cleanup(&lcd);
         }
 
@@ -127,9 +132,6 @@ int main(void) {
         return 1;
     }
 
-    // ----------------------------
-    // Game
-    // ----------------------------
     game_t game;
     game_init(&game);
 
@@ -139,25 +141,19 @@ int main(void) {
     uint32_t last_lcd_update = 0;
     game_state_t last_state = ST_IDLE;
 
-    // ----------------------------
-    // Main loop
-    // ----------------------------
     while (!game_should_exit(&game)) {
         uint32_t t = now_ms();
 
-        // Read switches
         uint32_t switch_state = 0;
         if (switch_read_all(&switches, &switch_state) != 0) {
             switch_state = 0;
         }
 
-        // Read buttons
         uint32_t button_state = 0;
         if (button_read_all(&buttons, &button_state) != 0) {
             button_state = 0;
         }
 
-        // Read accel shake flag
         int shake_detected_i = 0;
         if (accel_ok) {
             if (accel_poll_shake(&accel, &shake_detected_i) != 0) {
@@ -165,14 +161,12 @@ int main(void) {
             }
         }
 
-        // Build game input snapshot
         game_inputs_t in = {
             .switches = switch_state,
-            .buttons_raw = button_state,          // already normalized: pressed = 1
+            .buttons_raw = button_state,
             .shake_detected = (shake_detected_i != 0)
         };
 
-        // Update game
         game_update(&game, &fpga, &in, t);
 
         const game_outputs_t *out = game_get_outputs(&game);
@@ -181,7 +175,6 @@ int main(void) {
             continue;
         }
 
-        // Console state transition debug
         if (out->state != last_state) {
             last_state = out->state;
             printf("[MAIN] State -> %s | Mode=%s | BPM=%u | SeqLen=%u | Score=%u\n",
@@ -192,52 +185,49 @@ int main(void) {
                    out->score_0_100);
         }
 
-        // LCD update
         if (lcd_ok && (t - last_lcd_update) >= LCD_UPDATE_MS) {
             last_lcd_update = t;
 
-            char line1[81];
-            char line2[81];
+            char line1[32];
+            char line2[32];
+            char line3[32];
+            char line4[32];
 
-            // Prefer game-provided UI text when available
             if (out->state == ST_RESULTS) {
-                snprintf(line1, sizeof(line1),
-                         "Score:%3u  %s",
-                         out->score_0_100,
+                snprintf(line1, sizeof(line1), "Mode: %s", select_mode_str(game.select_mode));
+                snprintf(line2, sizeof(line2), "Diff: %s", mode_str(out->mode));
+                snprintf(line3, sizeof(line3), "Score: %3u", out->score_0_100);
+                snprintf(line4, sizeof(line4), "%s",
                          (out->rating_text ? out->rating_text : ""));
-
-                snprintf(line2, sizeof(line2),
-                         "%s",
-                         (out->line2 ? out->line2 : ""));
             } else {
-                snprintf(line1, sizeof(line1),
-                         "%s | %s | %ubpm",
-                         (out->line1 ? out->line1 : state_str(out->state)),
-                         mode_str(out->mode),
-                         out->bpm);
-
-                snprintf(line2, sizeof(line2),
-                         "%s",
+                snprintf(line1, sizeof(line1), "Mode: %s", select_mode_str(game.select_mode));
+                snprintf(line2, sizeof(line2), "Diff: %s", mode_str(out->mode));
+                snprintf(line3, sizeof(line3), "BPM: %u", out->bpm);
+                snprintf(line4, sizeof(line4), "%s",
                          (out->line2 ? out->line2 : ""));
             }
 
-            lcd_write_line(&lcd, 0, line1);
-            lcd_write_line(&lcd, 1, line2);
+            lcd_clear(&lcd);
+            lcd_write_text(&lcd, 0, 0,  line1);
+            lcd_write_text(&lcd, 0, 16, line2);
+            lcd_write_text(&lcd, 0, 32, line3);
+            lcd_write_text(&lcd, 0, 48, line4);
+            lcd_refresh(&lcd);
         }
 
         usleep(LOOP_SLEEP_US);
     }
 
-    // ----------------------------
-    // Shutdown
-    // ----------------------------
     printf("[MAIN] Exit requested.\n");
 
-    fpga_if_stop(&fpga);
+    fpga_if_clear(&fpga);
+    fpga_if_cleanup(&fpga);
 
     if (lcd_ok) {
-        lcd_write_line(&lcd, 0, "Exited.");
-        lcd_write_line(&lcd, 1, "");
+        lcd_clear(&lcd);
+        lcd_write_text(&lcd, 0, 0, "Exited.");
+        lcd_refresh(&lcd);
+        lcd_backlight(&lcd, false);
     }
 
     if (accel_ok) accel_cleanup(&accel);

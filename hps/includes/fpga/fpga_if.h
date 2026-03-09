@@ -3,63 +3,76 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "../hal/hal-api.h"
 #include "../game/game_types.h"
+#include "../../lib/address_map_arm.h"
 
 // ------------------------------------------------------------
-// FPGA Rhythm Game Avalon-MM Interface (LW Bridge offsets)
+// Rhythm FPGA Interface
 // ------------------------------------------------------------
-// NOTE: RHYTHM_IF_BASE is the base offset you will assign in
-// Platform Designer (Qsys) for your custom FPGA peripheral.
-// Keep the register map stable to avoid rework.
+// The custom rhythm_fpga_circuits module is driven by a single
+// 32-bit control word written by the HPS through the existing
+// JP1 PIO exported by the DE10 Standard Computer base project.
+//
+// ctrl bit fields:
+//   [1:0]  lane select
+//   [3:2]  LED animation mode
+//   [7:4]  tempo select
+//   [8]    enable
+//   [9]    reset
 // ------------------------------------------------------------
 
-#ifndef RHYTHM_IF_BASE
-#define RHYTHM_IF_BASE 0x00004000u   // placeholder until Qsys assigns it
-#endif
+// Lane select for HEX prompt
+typedef enum {
+    FPGA_LANE_0 = 0,
+    FPGA_LANE_1 = 1,
+    FPGA_LANE_2 = 2,
+    FPGA_LANE_3 = 3
+} fpga_lane_t;
+
+// LED controller modes from led_controller.v
+typedef enum {
+    FPGA_LED_OFF   = 0, // mode 0
+    FPGA_LED_CHASE = 1, // mode 1
+    FPGA_LED_PULSE = 2, // mode 2
+    FPGA_LED_BLINK = 3  // mode 3
+} fpga_led_mode_t;
+
+// Tempo select from beat_engine.v
+typedef enum {
+    FPGA_TEMPO_45_BPM = 0,
+    FPGA_TEMPO_60_BPM = 1,
+    FPGA_TEMPO_75_BPM = 2
+} fpga_tempo_t;
 
 typedef struct {
-  uint8_t lane;        // 0..3
-  bool flash_all;      // show "all segments" flash cue
-  bool shake;          // shake step (expert only)
-} fpga_step_t;
-
-typedef struct {
-  bool preview_active;
-  bool playback_active;
-  bool done;
-
-  uint32_t step_index;           // current step index
-  uint32_t beat_edge;            // increments/toggles each beat
-
-  bool window_active;            // button scoring window active
-  bool shake_window_active;      // shake scoring window active
-} fpga_status_t;
-
-typedef struct {
-  hal_map_t *hal;                // your HAL mapping (LW bridge)
-  game_mode_t mode;
-  uint32_t bpm;
-  uint32_t seq_len;
+    hal_map_t *hal;
+    uint32_t ctrl_word;   // software shadow copy of JP1 control word
+    int initialized;
 } fpga_if_t;
 
 // -------------------- API --------------------
 
 int  fpga_if_init(fpga_if_t *fpga, hal_map_t *hal);
+int  fpga_if_cleanup(fpga_if_t *fpga);
 
-void fpga_if_reset(fpga_if_t *fpga);
+// low-level write of current shadow control word
+void fpga_if_commit(fpga_if_t *fpga);
 
-void fpga_if_configure(fpga_if_t *fpga, game_mode_t mode, uint32_t bpm, uint32_t seq_len);
+// whole-word helpers
+void fpga_if_clear(fpga_if_t *fpga);
+void fpga_if_reset_pulse(fpga_if_t *fpga);
 
-int  fpga_if_load_sequence(fpga_if_t *fpga, const fpga_step_t *steps, uint32_t count);
+// field setters
+void fpga_if_set_lane(fpga_if_t *fpga, fpga_lane_t lane);
+void fpga_if_set_led_mode(fpga_if_t *fpga, fpga_led_mode_t mode);
+void fpga_if_set_tempo(fpga_if_t *fpga, fpga_tempo_t tempo);
+void fpga_if_set_enable(fpga_if_t *fpga, bool enable);
+void fpga_if_set_reset(fpga_if_t *fpga, bool reset);
 
-void fpga_if_start_preview(fpga_if_t *fpga);
-void fpga_if_start_playback(fpga_if_t *fpga);
-void fpga_if_stop(fpga_if_t *fpga);
-
-fpga_status_t fpga_if_read_status(fpga_if_t *fpga);
-
-// Utility: pack a step into a 32-bit register word
-uint32_t fpga_if_pack_step(fpga_step_t s);
+// convenience helpers
+void fpga_if_apply(fpga_if_t *fpga, game_mode_t game_mode, uint8_t lane, fpga_led_mode_t led_mode, bool enable);
+fpga_tempo_t fpga_if_game_mode_to_tempo(game_mode_t mode);
 
 #endif // FPGA_IF_H
