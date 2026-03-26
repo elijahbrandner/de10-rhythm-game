@@ -27,22 +27,22 @@ void sequence_mode_params(game_mode_t mode, uint32_t *bpm_out, uint32_t *len_out
 
         case GAME_MODE_MEDIUM:
             *bpm_out = 60;
-            *len_out = 8;
+            *len_out = 6;
             break;
 
         case GAME_MODE_HARD:
             *bpm_out = 75;
-            *len_out = 10;
+            *len_out = 7;
             break;
 
         case GAME_MODE_EXPERT:
             *bpm_out = 75;
-            *len_out = 12;
+            *len_out = 8;
             break;
 
         default:
             *bpm_out = 60;
-            *len_out = 8;
+            *len_out = 6;
             break;
     }
 }
