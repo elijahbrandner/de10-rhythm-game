@@ -311,14 +311,17 @@ void game_update(game_t *g, fpga_if_t *fpga, const game_inputs_t *in, uint32_t n
 
             if (remaining > 2u) {
                 set_output_text(g, "Starting", "3");
-                fpga_show_step(fpga, g->mode, 0, FPGA_LED_PULSE);
             } else if (remaining > 1u) {
                 set_output_text(g, "Starting", "2");
-                fpga_show_step(fpga, g->mode, 1, FPGA_LED_PULSE);
             } else {
                 set_output_text(g, "Starting", "1");
-                fpga_show_step(fpga, g->mode, 2, FPGA_LED_BLINK);
             }
+
+            fpga_if_set_lane(fpga, FPGA_LANE_0);   // neutral/fixed lane
+            fpga_if_set_tempo(fpga, fpga_if_game_mode_to_tempo(g->mode));
+            fpga_if_set_enable(fpga, true);
+            fpga_if_set_led_mode(fpga, FPGA_LED_BLINK);  // or FPGA_LED_PULSE
+            fpga_if_commit(fpga);
         } break;
 
         case ST_PLAYBACK: {
