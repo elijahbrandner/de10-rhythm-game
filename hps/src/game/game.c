@@ -14,6 +14,9 @@
 #define STEP_WINDOW_NUM      85u
 #define STEP_WINDOW_DEN      100u
 
+#define COUNTDOWN_DURATION_MS  3000u
+#define COUNTDOWN_STEP_MS      1000u
+
 // ----------------------------
 // Helpers
 // ----------------------------
@@ -289,9 +292,32 @@ void game_update(game_t *g, fpga_if_t *fpga, const game_inputs_t *in, uint32_t n
             fpga_show_step(fpga, g->mode, 0, FPGA_LED_CHASE);
 
             if (edges & 0x1u) {
+                enter_state(g, ST_COUNTDOWN, now_ms);
+                set_output_text(g, "Starting", "3");
+            }
+        } break;
+
+        case ST_COUNTDOWN: {
+            uint32_t elapsed = now_ms - g->state_enter_ms;
+
+            if (elapsed >= COUNTDOWN_DURATION_MS) {
                 g->last_step_index = 0;
                 enter_state(g, ST_PLAYBACK, now_ms);
                 set_output_text(g, "PLAY", "Press keys");
+                break;
+            }
+
+            uint32_t remaining = 3u - (elapsed / COUNTDOWN_STEP_MS);
+
+            if (remaining > 2u) {
+                set_output_text(g, "Starting", "3");
+                fpga_show_step(fpga, g->mode, 0, FPGA_LED_PULSE);
+            } else if (remaining > 1u) {
+                set_output_text(g, "Starting", "2");
+                fpga_show_step(fpga, g->mode, 1, FPGA_LED_PULSE);
+            } else {
+                set_output_text(g, "Starting", "1");
+                fpga_show_step(fpga, g->mode, 2, FPGA_LED_BLINK);
             }
         } break;
 
@@ -378,4 +404,5 @@ void game_update(game_t *g, fpga_if_t *fpga, const game_inputs_t *in, uint32_t n
     g->out.bpm = g->bpm;
     g->out.seq_len = g->seq_len;
     g->out.score_0_100 = g->score;
+    g->out.state = g->state;
 }

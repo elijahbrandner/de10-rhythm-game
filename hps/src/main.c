@@ -53,14 +53,15 @@ static const char *select_mode_str(select_mode_t m) {
 
 static const char *state_str(game_state_t s) {
     switch (s) {
-        case ST_IDLE:     return "IDLE";
-        case ST_WATCH:    return "WATCH";
-        case ST_PREVIEW:  return "PREVIEW";
-        case ST_GO:       return "GO";
-        case ST_PLAYBACK: return "PLAYBACK";
-        case ST_RESULTS:  return "RESULTS";
-        case ST_EXIT:     return "EXIT";
-        default:          return "?";
+        case ST_IDLE:      return "IDLE";
+        case ST_WATCH:     return "WATCH";
+        case ST_PREVIEW:   return "PREVIEW";
+        case ST_GO:        return "GO";
+        case ST_COUNTDOWN: return "COUNTDOWN";
+        case ST_PLAYBACK:  return "PLAYBACK";
+        case ST_RESULTS:   return "RESULTS";
+        case ST_EXIT:      return "EXIT";
+        default:           return "?";
     }
 }
 

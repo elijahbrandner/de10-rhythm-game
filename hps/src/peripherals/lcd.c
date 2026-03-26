@@ -117,11 +117,8 @@ int lcd_clear(lcd_handle_t *lcd) {
 
 int lcd_write_text(lcd_handle_t *lcd, int x, int y, const char *text) {
     if (!lcd || !lcd->initialized || !text) return -1;
-    
-    DRAW_Clear(&lcd->canvas, LCD_WHITE);
+
     DRAW_PrintString(&lcd->canvas, x, y, (char*)text, LCD_BLACK, &font_16x16);
-    DRAW_Refresh(&lcd->canvas);
-    
     return 0;
 }
 

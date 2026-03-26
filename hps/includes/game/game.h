@@ -16,6 +16,7 @@ typedef enum {
     ST_WATCH,
     ST_PREVIEW,
     ST_GO,
+    ST_COUNTDOWN,
     ST_PLAYBACK,
     ST_RESULTS,
     ST_EXIT
