@@ -38,6 +38,7 @@ SRCS = \
 	$(SRC_DIR)/peripherals/switch.c \
 	$(SRC_DIR)/peripherals/lcd.c \
 	$(SRC_DIR)/peripherals/accel.c \
+	$(SRC_DIR)/peripherals/ADXL345.c \
 	$(SRC_DIR)/vendor/lcd/LCD_Driver.c \
 	$(SRC_DIR)/vendor/lcd/LCD_Hw.c \
 	$(SRC_DIR)/vendor/lcd/LCD_Lib.c \
