@@ -97,7 +97,7 @@ extern volatile int *SYSMGR_ptr;   	// virtual address pointer to SYSMGR
 #define ADXL345_REG_TIME_INACT		0x26
 #define ADXL345_REG_ACT_INACT_CTL	0x27
 
-// I2C0 Controller Registers
+// I2C0 Controller Registers 
 #define I2C0_CON                (volatile unsigned int *)(I2C0_ptr + 0x00000000) // ((volatile unsigned int *) 0xffc04000)
 #define I2C0_TAR                (volatile unsigned int *)(I2C0_ptr + 0x00000001) // ((volatile unsigned int *) 0xffc04004)
 #define I2C0_DATA_CMD           (volatile unsigned int *)(I2C0_ptr + 0x00000004) // ((volatile unsigned int *) 0xffc04010)

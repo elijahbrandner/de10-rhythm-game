@@ -32,7 +32,6 @@ SRCS = \
 	$(SRC_DIR)/game/game.c \
 	$(SRC_DIR)/game/sequence.c \
 	$(SRC_DIR)/game/scoring.c \
-	$(SRC_DIR)/game/timing.c \
 	$(SRC_DIR)/hal/hal-api.c \
 	$(SRC_DIR)/peripherals/button.c \
 	$(SRC_DIR)/peripherals/switch.c \

@@ -64,28 +64,28 @@ void sequence_mode_params(game_mode_t mode, uint32_t *bpm_out, uint32_t *len_out
     {
         case GAME_MODE_EASY:
             *bpm_out = 45;  // Slower tempo for easier play
-            *len_out = 5;   // Shorter pattern
+            *len_out = 4;   // Shorter pattern
             break;
 
         case GAME_MODE_MEDIUM:
             *bpm_out = 60; // Moderate tmepo
-            *len_out = 6; // Slightly longer pattern
+            *len_out = 5; // Slightly longer pattern
             break;
 
         case GAME_MODE_HARD:
             *bpm_out = 75; // Faster tempo
-            *len_out = 7; // longer pattern
+            *len_out = 6; // longer pattern
             break;
 
         case GAME_MODE_EXPERT:
             *bpm_out = 75; // Same tempo as hard
-            *len_out = 8; // Longest pattern here
+            *len_out = 7; // Longest pattern here
             break;
 
         default:
             // Fallback if mode is invalid
             *bpm_out = 60; 
-            *len_out = 6;
+            *len_out = 5;
             break;
     }
 }

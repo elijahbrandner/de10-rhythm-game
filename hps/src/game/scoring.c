@@ -85,12 +85,12 @@ static hit_grade_t grade_from_offset(uint32_t offset_ms, uint32_t window_ms) {
     // Define grading thresholds as percentages of the window
     //
     // thresholds (current tuning)
-    // Perfect: first 40% of window
-    // Good:    first 65%
-    // OK:      first 85%
-    uint32_t p = (window_ms * 40u) / 100u;
-    uint32_t g = (window_ms * 65u) / 100u;
-    uint32_t o = (window_ms * 85u) / 100u;
+    // Perfect: first 50% of window
+    // Good:    first 75%
+    // OK:      first 90%
+    uint32_t p = (window_ms * 50u) / 100u;
+    uint32_t g = (window_ms * 75u) / 100u;
+    uint32_t o = (window_ms * 90u) / 100u;
 
     if (offset_ms <= p) return HIT_PERFECT;
     if (offset_ms <= g) return HIT_GOOD;

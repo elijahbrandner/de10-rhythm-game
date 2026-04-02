@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "ADXL345.h"
+#include "../../includes/peripherals/ADXL345.h"
 
 void Pinmux_Config(){
     // Set up pin muxing (in sysmgr) to connect ADXL345 wires to I2C0

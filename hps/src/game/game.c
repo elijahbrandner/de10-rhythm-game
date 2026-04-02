@@ -26,8 +26,8 @@
 #define RESULTS_DURATION_MS  4000u
 
 // Fraction of each beat that is considered the active scoring window
-// Here, the playable/scoring window is 85% of the full beat length
-#define STEP_WINDOW_NUM      85u
+// Here, the playable/scoring window is 100% of the full beat length
+#define STEP_WINDOW_NUM      100u
 #define STEP_WINDOW_DEN      100u
 
 // Total duration of the countdown before playback begins (3 seconds)
