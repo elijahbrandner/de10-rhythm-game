@@ -109,7 +109,7 @@ These modules are integrated in `rhythm_fpga_circuits.v` and controlled via a 32
 ---
 
 ## Demo
-🎥 https://youtu.be/7Byabn9huRc
+🎥 https://youtu.be/a1bEhrv9Sis
 
 ---
 
